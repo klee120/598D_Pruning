@@ -15,11 +15,19 @@ def trainable(module):
 def prunable(module, batchnorm, residual):
     r"""Returns boolean whether a module is prunable.
     """
+    # isprunable = isinstance(module, (layers.Linear, layers.Conv2d))
+    # if batchnorm:
+    #     isprunable |= isinstance(module, (layers.BatchNorm1d, layers.BatchNorm2d))
+    # if residual:
+    #     isprunable |= isinstance(module, (layers.Identity1d, layers.Identity2d))
+    # return isprunable
+    
     isprunable = isinstance(module, (layers.Linear, layers.Conv2d))
     if batchnorm:
         isprunable |= isinstance(module, (layers.BatchNorm1d, layers.BatchNorm2d))
     if residual:
-        isprunable |= isinstance(module, (layers.Identity1d, layers.Identity2d))
+        isprunable |= isinstance(module, layers.Identity)  # Assuming Identity covers all dimensions
+    # Consider other types if relevant for your architecture
     return isprunable
 
 def parameters(model):

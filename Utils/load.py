@@ -9,6 +9,7 @@ from Models import tinyimagenet_vgg
 from Models import tinyimagenet_resnet
 from Models import imagenet_vgg
 from Models import imagenet_resnet
+from Models import mlpnet
 from Pruners import pruners
 from Utils import custom_datasets
 
@@ -154,14 +155,26 @@ def model(model_architecture, model_class):
         'wide-resnet50' : imagenet_resnet.wide_resnet50_2,
         'wide-resnet101' : imagenet_resnet.wide_resnet101_2,
     }
+    mlp_models = {
+        'fc' : mlp.fc,
+        'conv' : mlp.conv,
+        # 'mlpnet': lambda: MlpNet(input_size=np.prod(input_shape), num_classes=num_classes)
+        'mlpnet': mlpnet.mlpnet_basic
+    }
     models = {
         'default' : default_models,
         'lottery' : lottery_models,
         'tinyimagenet' : tinyimagenet_models,
-        'imagenet' : imagenet_models
+        'imagenet' : imagenet_models,
+        'mlp' : mlp_models
     }
     if model_class == 'imagenet':
         print("WARNING: ImageNet models do not implement `dense_classifier`.")
+    
+    if model_class not in models:
+        raise ValueError(f"Model class {model_class} not supported")
+    # return models[model_class].get(model_architecture, lambda: None)()
+    
     return models[model_class][model_architecture]
 
 def pruner(method):

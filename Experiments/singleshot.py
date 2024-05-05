@@ -7,6 +7,7 @@ from Utils import generator
 from Utils import metrics
 from train import *
 from prune import *
+import timeit
 
 def run(args):
     ## Random Seed and Device ##
@@ -16,6 +17,15 @@ def run(args):
     ## Data ##
     print('Loading {} dataset.'.format(args.dataset))
     input_shape, num_classes = load.dimension(args.dataset) 
+    
+    # Set Fisher sample size to 5000
+    fisher_sample_size = 5000
+    
+    # Adjust batch sizes to approximate the Fisher sample size
+    prune_batch_size = min(args.prune_batch_size, fisher_sample_size)
+    train_batch_size = min(args.train_batch_size, fisher_sample_size)
+    test_batch_size = min(args.test_batch_size, fisher_sample_size)
+    
     prune_loader = load.dataloader(args.dataset, args.prune_batch_size, True, args.workers, args.prune_dataset_ratio * num_classes)
     train_loader = load.dataloader(args.dataset, args.train_batch_size, True, args.workers)
     test_loader = load.dataloader(args.dataset, args.test_batch_size, False, args.workers)
@@ -30,8 +40,7 @@ def run(args):
     opt_class, opt_kwargs = load.optimizer(args.optimizer)
     optimizer = opt_class(generator.parameters(model), lr=args.lr, weight_decay=args.weight_decay, **opt_kwargs)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=args.lr_drops, gamma=args.lr_drop_rate)
-
-
+    
     ## Pre-Train ##
     print('Pre-Train for {} epochs.'.format(args.pre_epochs))
     pre_result = train_eval_loop(model, loss, optimizer, scheduler, train_loader, 
@@ -47,8 +56,12 @@ def run(args):
     
     ## Post-Train ##
     print('Post-Training for {} epochs.'.format(args.post_epochs))
+    start = timeit.default_timer()
     post_result = train_eval_loop(model, loss, optimizer, scheduler, train_loader, 
                                   test_loader, device, args.post_epochs, args.verbose) 
+    
+    stop = timeit.default_timer()
+    print('Time: ', stop - start)
 
     ## Display Results ##
     frames = [pre_result.head(1), pre_result.tail(1), post_result.head(1), post_result.tail(1)]

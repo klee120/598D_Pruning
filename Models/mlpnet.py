@@ -42,6 +42,6 @@ class MlpNet(nn.Module):
             return x
 
 def mlpnet_basic(input_shape, num_classes, dense_classifier=False, pretrained=False):
-    
+    #cifar-10 = 3072
     return MlpNet(3072, num_classes=num_classes)
 

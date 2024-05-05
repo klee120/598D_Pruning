@@ -17,7 +17,15 @@ class Pruner:
         #     score = self.scores[id(param)]
         #     score[mask == 0.0] = -np.inf
 
+        # Example to check gradients are non-zero
+        # for name, param in self.masked_parameters:
+        #     if param.grad is not None:
+        #         print(f"{name} has non-zero gradient sum: {param.grad.sum()}")
+        #     else:
+        #         print(f"{name} has no gradients")
+            
         # Threshold scores
+        
         global_scores = torch.cat([torch.flatten(v) for v in self.scores.values()])
         k = int((1.0 - sparsity) * global_scores.numel())
         if not k < 1:
